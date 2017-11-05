@@ -1,7 +1,11 @@
+#pragma config(I2C_Usage, I2C1, i2cSensors)
+#pragma config(Sensor, in1,    mobile,         sensorNone)
+#pragma config(Sensor, I2C_1,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
+#pragma config(Sensor, I2C_2,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Motor,  port1,           bar1,          tmotorVex393_HBridge, openLoop)
-#pragma config(Motor,  port2,           rf,            tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port2,           rf,            tmotorVex393_MC29, openLoop, encoderPort, I2C_1)
 #pragma config(Motor,  port3,           rb,            tmotorVex393_MC29, openLoop, reversed)
-#pragma config(Motor,  port4,           lf,            tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port4,           lf,            tmotorVex393_MC29, openLoop, reversed, encoderPort, I2C_2)
 #pragma config(Motor,  port5,           lb,            tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port6,           goal1,         tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port7,           goal2,         tmotorVex393_MC29, openLoop, reversed)
@@ -17,8 +21,10 @@ int hl=0;
 int sl=0;
 task main()
 {
-
+clearLCDLine(0);
+clearLCDLine(1);
 while(true){
+
 		motor[lf] = reverse * (vexRT[Ch3] + reverse*(vexRt[Ch1]+ vexRT[Ch4]))/half;
 		motor[lb] = reverse * (vexRT[Ch3] + reverse*(vexRt[Ch1]+ vexRT[Ch4]))/half;
 		motor[rf] = reverse * (vexRT[Ch3] - reverse*(vexRt[Ch1]+ vexRT[Ch4]))/half;
@@ -45,6 +51,10 @@ while(true){
 				SensorValue[dgtl3] = !SensorValue[dgtl3];
 		}
 		sl = vexRT[Btn8R];
+		displayLCDString(1, 0, "Aut");
+	displayLCDNumber(0,0, SensorValue(mobile));
 	}
+
+
 
 }
