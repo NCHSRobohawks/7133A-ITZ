@@ -1,14 +1,14 @@
 #pragma config(Sensor, in1,    mobile,         sensorPotentiometer)
 #pragma config(Sensor, dgtl3,  claw,           sensorDigitalOut)
-#pragma config(Motor,  port1,           conveyor,      tmotorVex393_HBridge, openLoop, reversed)
-#pragma config(Motor,  port2,           rf,            tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port1,           conveyor,      tmotorVex393_HBridge, openLoop, scaled)
+#pragma config(Motor,  port2,           rf,            tmotorVex393_MC29, openLoop, scaled)
 #pragma config(Motor,  port3,           rm,            tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port4,           rb,            tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port4,           rb,            tmotorVex393_MC29, openLoop, scaled)
 #pragma config(Motor,  port5,           lf,            tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port6,           lm,            tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port6,           lm,            tmotorVex393_MC29, openLoop, scaled)
 #pragma config(Motor,  port7,           lb,            tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port8,           goal,          tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port9,           goal2,         tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port9,           goal2,         tmotorVex393_MC29, openLoop, scaled)
 #pragma config(Motor,  port10,          conveyor2,     tmotorVex393_HBridge, openLoop)
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
@@ -25,7 +25,7 @@
 //Main competition background code...do not modify!
 #include "Vex_Competition_Includes.c"
 
-int reverse = 1;
+int scale = 1;
 int half = 1;
 int rl=0;
 int hl=0;
@@ -157,12 +157,12 @@ task usercontrol()
 {
   // User control code here, inside the loop
 while(true){
-		motor[lf] = reverse * (vexRT[Ch3] + reverse*(vexRt[Ch1]+ vexRT[Ch4]))/half;
-		motor[lm] = reverse * (vexRT[Ch3] + reverse*(vexRt[Ch1]+ vexRT[Ch4]))/half;
-		motor[lb] = reverse * (vexRT[Ch3] + reverse*(vexRt[Ch1]+ vexRT[Ch4]))/half;
-		motor[rf] = reverse * (vexRT[Ch3] - reverse*(vexRt[Ch1]+ vexRT[Ch4]))/half;
-		motor[rm] = reverse * (vexRT[Ch3] - reverse*(vexRt[Ch1]+ vexRT[Ch4]))/half;
-		motor[rb] = reverse * (vexRT[Ch3] - reverse*(vexRt[Ch1]+ vexRT[Ch4]))/half;
+		motor[lf] = scale * (vexRT[Ch3] + scale*(vexRt[Ch1]+ vexRT[Ch4]))/half;
+		motor[lm] = scale * (vexRT[Ch3] + scale*(vexRt[Ch1]+ vexRT[Ch4]))/half;
+		motor[lb] = scale * (vexRT[Ch3] + scale*(vexRt[Ch1]+ vexRT[Ch4]))/half;
+		motor[rf] = scale * (vexRT[Ch3] - scale*(vexRt[Ch1]+ vexRT[Ch4]))/half;
+		motor[rm] = scale * (vexRT[Ch3] - scale*(vexRt[Ch1]+ vexRT[Ch4]))/half;
+		motor[rb] = scale * (vexRT[Ch3] - scale*(vexRt[Ch1]+ vexRT[Ch4]))/half;
 
 		displayLCDNumber(0,0,SensorValue(mobile));
 		if(vexRT[Btn6U]){
@@ -191,7 +191,7 @@ while(true){
 	}
 
 		if(vexRT[Btn8D]!=rl && rl){
-			reverse *= -1;
+			scale *= -1;
 		}
 		rl = vexRT[Btn8D];
 		if(vexRT[Btn7D]!=hl && hl){
