@@ -1,5 +1,7 @@
 #pragma config(I2C_Usage, I2C1, i2cSensors)
-#pragma config(Sensor, in1,    mobile,         sensorNone)
+#pragma config(Sensor, in1,    mobile,         sensorPotentiometer)
+#pragma config(Sensor, in2,    bar,            sensorPotentiometer)
+#pragma config(Sensor, dgtl1,  elevator,       sensorQuadEncoder)
 #pragma config(Sensor, I2C_1,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Sensor, I2C_2,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Motor,  port1,           bar1,          tmotorVex393_HBridge, openLoop)
@@ -48,7 +50,7 @@ while(true){
 		}
 		hl = vexRT[Btn7D];
 		if (vexRT[Btn8R]!=sl && sl) {
-				SensorValue[dgtl3] = !SensorValue[dgtl3];
+				SensorValue[solenoid] = !SensorValue[solenoid];
 		}
 		sl = vexRT[Btn8R];
 		displayLCDString(1, 0, "Aut");
