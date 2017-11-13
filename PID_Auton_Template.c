@@ -63,62 +63,67 @@ void init() {
     ticksPerFoot = 298.1; // Number of ticks per foot traveled
 
 
-    waitBetweenPID = 0; // Number of milliseconds to wait after each PID move
+    waitBetweenPID = 100; // Number of milliseconds to wait after each PID move
 
 }
 
-long target[5] = {0, 0, 0, 0, 0};
+long target[6] = {0, 0, 0, 0, 0, 0};
 
 /*
 Targets
 * * *
 0 - left wheels
 1 - right wheels
-2 - mobile goal intake
-3 - elevator
-4 - chain bar
+2 - left mobile goal
+3 - right mobile goal
+4 - elevator
+5 - chain bar
 * * *
 */
 task pid() {
 
-    long error[5] = {0, 0, 0, 0, 0};
-    long pError[5] = {0, 0, 0, 0, 0};
-    long p[5] = {0, 0, 0, 0, 0};
-    long i[5] = {0, 0, 0, 0, 0};
-    long d[5] = {0, 0, 0, 0, 0};
+    long error[6] = {0, 0, 0, 0, 0, 0};
+    long pError[6] = {0, 0, 0, 0, 0, 0};
+    long p[6] = {0, 0, 0, 0, 0, 0};
+    long i[6] = {0, 0, 0, 0, 0, 0};
+    long d[6] = {0, 0, 0, 0, 0, 0};
 
     while(true) {
 
         error[0] = target[0] - nMotorEncoder[port4];
         error[1] = target[1] - nMotorEncoder[port2];
-        error[2] = target[2] - SensorValue(mobile);
-        error[3] = target[3] - SensorValue(bar);
-        error[4] = target[4] - SensorValue(elevator);
+        error[2] = target[2] - SensorValue(mobile1);
+        error[3] = target[3] - SensorValue(mobile2);
+        error[4] = target[4] - SensorValue(bar);
+        error[5] = target[5] - SensorValue(elevator);
         p[0] = error[0];
         p[1] = error[1];
         p[2] = error[2];
         p[3] = error[3];
         p[4] = error[4];
+        p[5] = error[5];
         i[0] = abs(i[0] + error[0]) < kL[0] ? i[0] + error[0] : sgn(i[0] + error[0])*kL[0];
         i[1] = abs(i[1] + error[1]) < kL[0] ? i[1] + error[1] : sgn(i[1] + error[1])*kL[0];
         i[2] = abs(i[2] + error[2]) < kL[0] ? i[2] + error[2] : sgn(i[2] + error[2])*kL[0];
         i[3] = abs(i[3] + error[3]) < kL[0] ? i[3] + error[3] : sgn(i[3] + error[3])*kL[0];
         i[4] = abs(i[4] + error[4]) < kL[0] ? i[4] + error[4] : sgn(i[4] + error[4])*kL[0];
+        i[5] = abs(i[5] + error[5]) < kL[0] ? i[5] + error[5] : sgn(i[5] + error[5])*kL[0];
         d[0] = error[0] - pError[0];
         d[1] = error[1] - pError[1];
         d[2] = error[2] - pError[2];
         d[3] = error[3] - pError[3];
         d[4] = error[4] - pError[4];
+        d[5] = error[5] - pError[5];
         motor[port4] = p[0]*kP[0] + i[0]*kI[0] + d[0]*kD[0];
         motor[port5] = p[0]*kP[0] + i[0]*kI[0] + d[0]*kD[0];
         motor[port2] = p[1]*kP[0] + i[1]*kI[0] + d[1]*kD[0];
         motor[port3] = p[1]*kP[0] + i[1]*kI[0] + d[1]*kD[0];
         motor[port6] = p[2]*kP[1] + i[2]*kI[1] + d[2]*kD[1];
-        motor[port7] = p[2]*kP[1] + i[2]*kI[1] + d[2]*kD[1];
-        motor[port8] = p[3]*kP[2] + i[3]*kI[2] + d[3]*kD[2];
-        motor[port9] = p[3]*kP[2] + i[3]*kI[2] + d[3]*kD[2];
-        motor[port1] = p[4]*kP[3] + i[4]*kI[3] + d[4]*kD[3];
-        motor[port10] = p[4]*kP[3] + i[4]*kI[3] + d[4]*kD[3];
+        motor[port7] = p[3]*kP[1] + i[3]*kI[1] + d[3]*kD[1];
+        motor[port8] = p[4]*kP[2] + i[4]*kI[2] + d[4]*kD[2];
+        motor[port9] = p[4]*kP[2] + i[4]*kI[2] + d[4]*kD[2];
+        motor[port1] = p[5]*kP[3] + i[5]*kI[3] + d[5]*kD[3];
+        motor[port10] = p[5]*kP[3] + i[5]*kI[3] + d[5]*kD[3];
 
         wait1Msec(25);
 
@@ -137,6 +142,7 @@ task main() {
     displayLCDNumber(0,0,target[0]);
     */
     target[2] = 710;
+    target[3] = 710;
     while(abs(SensorValue(mobile) - target[2]) > tolerance[3]);
     wait1Msec(waitBetweenPID);
     /*
