@@ -30,18 +30,20 @@ Constants
 */
 void init() {
     //Wheel base constants
-    kP[0] = 0.0;
-    kI[0] = 0.0;
-    kD[0] = 0.0;
+    kP[0] = -0.08;
+    kI[0] = -0.3;
+    kD[0] = -0.035;
     kL[0] = 0.0;
-    tolerance[0] = 0;
+    tolerance[0] = 10;
+    nMotorEncoder[port2] = 0;
+    nMotorEncoder[port3] = 0;
 
     //Mobile goal lift constants
-    kP[1] = 0.0;
-    kI[1] = 0.0;
+    kP[1] = 0.03;
+    kI[1] = 0.5;
     kD[1] = 0.0;
     kL[1] = 0.0;
-    tolerance[1] = 0;
+    tolerance[1] = 5;
 
     //Elevator constants
     kP[2] = 0.0;
@@ -58,7 +60,7 @@ void init() {
     tolerance[3] = 0;
 
     ticksPerRotation = 0; // Number of ticks per full rotation
-    ticksPerFoot = 0; // Number of ticks per foot traveled
+    ticksPerFoot = 298.1; // Number of ticks per foot traveled
 
 
     waitBetweenPID = 0; // Number of milliseconds to wait after each PID move
@@ -129,12 +131,22 @@ task main() {
     init();
 
     startTask(pid);
-
-    target[0] += 24*ticksPerFoot/12;
-    target[1] += 24*ticksPerFoot/12;
+		/*
+    target[0] += -24*ticksPerFoot/12;
+    target[1] += -24*ticksPerFoot/12;
+    displayLCDNumber(0,0,target[0]);
+    */
+    target[2] = 710;
+    while(abs(SensorValue(mobile) - target[2]) > tolerance[3]);
+    wait1Msec(waitBetweenPID);
+    /*
+    target[0] += 19*ticksPerFoot/12;
+    target[1] += 19*ticksPerFoot/12;
     while(abs(nMotorEncoder[port4] - target[0]) > tolerance[0] && abs(nMotorEncoder[port2] - target[1]) > tolerance[0]);
     wait1Msec(waitBetweenPID);
+    target[2] = 3900;
+    while(abs(SensorValue(mobile) - target[2]) > tolerance[3]);
 
-    stopTask(pid);
+    stopTask(pid);'*/
 
 }
