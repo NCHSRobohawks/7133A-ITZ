@@ -1,6 +1,7 @@
 #pragma config(I2C_Usage, I2C1, i2cSensors)
-#pragma config(Sensor, in1,    mobile,         sensorPotentiometer)
-#pragma config(Sensor, in2,    bar,            sensorPotentiometer)
+#pragma config(Sensor, in1,    mobile1,        sensorPotentiometer)
+#pragma config(Sensor, in2,    mobile2,        sensorPotentiometer)
+#pragma config(Sensor, in3,    bar,            sensorNone)
 #pragma config(Sensor, dgtl1,  elevator,       sensorQuadEncoder)
 #pragma config(Sensor, I2C_1,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Sensor, I2C_2,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
@@ -32,7 +33,7 @@ void init() {
     //Wheel base constants
     kP[0] = -0.08;
     kI[0] = -0.3;
-    kD[0] = -0.035;
+    kD[0] = 1.1;
     kL[0] = 0.0;
     tolerance[0] = 10;
     nMotorEncoder[port2] = 0;
@@ -67,7 +68,7 @@ void init() {
 
 }
 
-long target[6] = {0, 0, 0, 0, 0, 0};
+long target[6] = {0, 0, sensorValue(mobile1), sensorValue(mobile2), 0, 0};
 
 /*
 Targets
@@ -109,6 +110,7 @@ task pid() {
         i[4] = abs(i[4] + error[4]) < kL[0] ? i[4] + error[4] : sgn(i[4] + error[4])*kL[0];
         i[5] = abs(i[5] + error[5]) < kL[0] ? i[5] + error[5] : sgn(i[5] + error[5])*kL[0];
         d[0] = error[0] - pError[0];
+        displayLCDNumber(0,1, d[0]);
         d[1] = error[1] - pError[1];
         d[2] = error[2] - pError[2];
         d[3] = error[3] - pError[3];
@@ -125,6 +127,12 @@ task pid() {
         motor[port1] = p[5]*kP[3] + i[5]*kI[3] + d[5]*kD[3];
         motor[port10] = p[5]*kP[3] + i[5]*kI[3] + d[5]*kD[3];
 
+        pError[0] = error[0];
+        pError[1] = error[1];
+        pError[2] = error[2];
+        pError[3] = error[3];
+        pError[4] = error[4];
+        pError[5] = error[5];
         wait1Msec(25);
 
     }
@@ -136,15 +144,17 @@ task main() {
     init();
 
     startTask(pid);
-		/*
+
     target[0] += -24*ticksPerFoot/12;
     target[1] += -24*ticksPerFoot/12;
     displayLCDNumber(0,0,target[0]);
-    */
+
+    /*
     target[2] = 710;
     target[3] = 710;
-    while(abs(SensorValue(mobile) - target[2]) > tolerance[3]);
+    while(abs(SensorValue(mobile1) - target[2]) > tolerance[3]);
     wait1Msec(waitBetweenPID);
+    */
     /*
     target[0] += 19*ticksPerFoot/12;
     target[1] += 19*ticksPerFoot/12;
