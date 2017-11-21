@@ -1,8 +1,10 @@
 #pragma config(I2C_Usage, I2C1, i2cSensors)
 #pragma config(Sensor, in1,    mobile1,        sensorPotentiometer)
 #pragma config(Sensor, in2,    mobile2,        sensorPotentiometer)
-#pragma config(Sensor, in3,    bar,            sensorNone)
+#pragma config(Sensor, in3,    gyro,           sensorGyro)
+#pragma config(Sensor, in4,    bar,            sensorPotentiometer)
 #pragma config(Sensor, dgtl1,  elevator,       sensorQuadEncoder)
+#pragma config(Sensor, dgtl6,  claw,           sensorDigitalOut)
 #pragma config(Sensor, I2C_1,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Sensor, I2C_2,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Motor,  port1,           bar1,          tmotorVex393_HBridge, openLoop)
@@ -10,8 +12,8 @@
 #pragma config(Motor,  port3,           rb,            tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port4,           lf,            tmotorVex393_MC29, openLoop, reversed, encoderPort, I2C_2)
 #pragma config(Motor,  port5,           lb,            tmotorVex393_MC29, openLoop, reversed)
-#pragma config(Motor,  port6,           goal1,         tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port7,           goal2,         tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port6,           goal2,         tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port7,           goal1,         tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port8,           lift1,         tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port9,           lift2,         tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port10,          bar2,          tmotorVex393_HBridge, openLoop)
@@ -40,10 +42,10 @@ void init() {
     nMotorEncoder[port3] = 0;
 
     //Mobile goal lift constants
-    kP[1] = 0.03;
-    kI[1] = 0.5;
-    kD[1] = 0.0;
-    kL[1] = 0.0;
+    kP[1] = 0.3;
+    kI[1] = 0.04;
+    kD[1] = -0.00;
+    kL[1] = 20;
     tolerance[1] = 5;
 
     //Elevator constants
@@ -64,7 +66,7 @@ void init() {
     ticksPerFoot = 298.1; // Number of ticks per foot traveled
 
 
-    waitBetweenPID = 100; // Number of milliseconds to wait after each PID move
+    waitBetweenPID = 1000; // Number of milliseconds to wait after each PID move
 
 }
 
@@ -120,12 +122,12 @@ task pid() {
         motor[port5] = p[0]*kP[0] + i[0]*kI[0] + d[0]*kD[0];
         motor[port2] = p[1]*kP[0] + i[1]*kI[0] + d[1]*kD[0];
         motor[port3] = p[1]*kP[0] + i[1]*kI[0] + d[1]*kD[0];
-        motor[port6] = p[2]*kP[1] + i[2]*kI[1] + d[2]*kD[1];
-        motor[port7] = p[3]*kP[1] + i[3]*kI[1] + d[3]*kD[1];
+        motor[port7] = p[2]*kP[1] + i[2]*kI[1] + d[2]*kD[1];
+        motor[port6] = p[3]*kP[1] + i[3]*kI[1] + d[3]*kD[1];
         motor[port8] = p[4]*kP[2] + i[4]*kI[2] + d[4]*kD[2];
         motor[port9] = p[4]*kP[2] + i[4]*kI[2] + d[4]*kD[2];
-        motor[port1] = p[5]*kP[3] + i[5]*kI[3] + d[5]*kD[3];
-        motor[port10] = p[5]*kP[3] + i[5]*kI[3] + d[5]*kD[3];
+        //motor[port1] = p[5]*kP[3] + i[5]*kI[3] + d[5]*kD[3];
+        //motor[port10] = p[5]*kP[3] + i[5]*kI[3] + d[5]*kD[3];
 
         pError[0] = error[0];
         pError[1] = error[1];
@@ -138,23 +140,35 @@ task pid() {
     }
 
 }
+task deploy(){
+		motor[port1] = 100;
+		motor[port10] = 100;
+		wait1Msec(2000);
+		motor[1] = 127;
+		motor[port1] = 0;
+		motor[port10] = 0;
+	}
 
 task main() {
 
     init();
-
+    SensorValue[claw] = 1;
+    startTask(deploy);
+    wait1Msec(500);
     startTask(pid);
-
+/*
     target[0] += -24*ticksPerFoot/12;
     target[1] += -24*ticksPerFoot/12;
     displayLCDNumber(0,0,target[0]);
+*/
 
-    /*
-    target[2] = 710;
-    target[3] = 710;
+    target[2] = 730;
+    target[3] = 345;
     while(abs(SensorValue(mobile1) - target[2]) > tolerance[3]);
     wait1Msec(waitBetweenPID);
-    */
+    target[0] += -47*ticksPerFoot/12;
+    target[1] += -47*ticksPerFoot/12;
+		while(abs(nMotorEncoder[port4] - target[0]) > tolerance[0] && abs(nMotorEncoder[port2] - target[1]) > tolerance[0]);
     /*
     target[0] += 19*ticksPerFoot/12;
     target[1] += 19*ticksPerFoot/12;
