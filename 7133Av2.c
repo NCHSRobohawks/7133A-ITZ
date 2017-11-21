@@ -1,7 +1,9 @@
 #pragma config(I2C_Usage, I2C1, i2cSensors)
-#pragma config(Sensor, in1,    mobile,         sensorPotentiometer)
-#pragma config(Sensor, in2,    bar,            sensorPotentiometer)
+#pragma config(Sensor, in1,    mobile1,        sensorPotentiometer)
+#pragma config(Sensor, in2,    mobile2,        sensorPotentiometer)
+#pragma config(Sensor, in3,    gyro,           sensorGyro)
 #pragma config(Sensor, dgtl1,  elevator,       sensorQuadEncoder)
+#pragma config(Sensor, dgtl6,  solenoid,       sensorDigitalOut)
 #pragma config(Sensor, I2C_1,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Sensor, I2C_2,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Motor,  port1,           bar1,          tmotorVex393_HBridge, openLoop)
@@ -21,10 +23,37 @@ int half = 1;
 int rl=0;
 int hl=0;
 int sl=0;
+int ll=0
+bool lower = False;
+long error[2] = {0, 0}
+    long i[2] = {0,0};
+
+task mobile_goal() {
+		while(True){
+		if(!lower){
+			motor[goal1] = (127 * vexRt[Btn6U]) + (-127 * vexRT[Btn6D]);
+			motor[goal2] = (127 * vexRt[Btn6U]) + (-127 * vexRT[Btn6D]);
+  }
+
+    else{
+        error[0] = 730 - SensorValue(mobile1);
+        error[1] = 345 - SensorValue(mobile2);
+        i[0] = abs(i[0] + error[0]) < 0 ? i[0] + error[0] : sgn(i[0] + error[0])*0;
+        i[1] = abs(i[1] + error[1]) < 0 ? i[0] + error[1] : sgn(i[0] + error[1])*0;
+        motor[port7] = error[0]*0.3 + i[0]*0.04;
+        motor[port6] = error[1]*0.3 + i[1]*0.04;
+        wait1Msec(25);
+
+    }
+}
+}
+
+
 task main()
 {
 clearLCDLine(0);
 clearLCDLine(1);
+startTask(mobile_goal);
 while(true){
 
 		motor[lf] = reverse * (vexRT[Ch3] + reverse*(vexRt[Ch1]+ vexRT[Ch4]))/half;
@@ -32,8 +61,7 @@ while(true){
 		motor[rf] = reverse * (vexRT[Ch3] - reverse*(vexRt[Ch1]+ vexRT[Ch4]))/half;
 		motor[rb] = reverse * (vexRT[Ch3] - reverse*(vexRt[Ch1]+ vexRT[Ch4]))/half;
 
-		motor[goal1] = (127 * vexRt[Btn6U]) + (-127 * vexRT[Btn6D]);
-		motor[goal2] = (127 * vexRt[Btn6U]) + (-127 * vexRT[Btn6D]);
+
 
 		motor[lift1] = (127 * vexRt[Btn5U]) + (-127 * vexRT[Btn5D]);
 		motor[lift2] = (127 * vexRt[Btn5U]) + (-127 * vexRT[Btn5D]);
@@ -53,8 +81,13 @@ while(true){
 				SensorValue[solenoid] = !SensorValue[solenoid];
 		}
 		sl = vexRT[Btn8R];
+
+		if(vexRT[Btn8L]!=ll && ll){
+					lower = !lower;
+				}
+		ll = vexRT[Btn8L];
 		displayLCDString(1, 0, "Aut");
-	displayLCDNumber(0,0, SensorValue(mobile));
+	displayLCDNumber(0,0, SensorValue(mobile1));
 	}
 
 
