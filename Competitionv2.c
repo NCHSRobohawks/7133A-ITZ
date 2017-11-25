@@ -1,7 +1,6 @@
 #pragma config(I2C_Usage, I2C1, i2cSensors)
 #pragma config(Sensor, in1,    mobile1,        sensorPotentiometer)
 #pragma config(Sensor, in2,    mobile2,        sensorPotentiometer)
-#pragma config(Sensor, in3,    gyro,           sensorGyro)
 #pragma config(Sensor, in4,    bar,            sensorPotentiometer)
 #pragma config(Sensor, dgtl1,  elevator,       sensorQuadEncoder)
 #pragma config(Sensor, dgtl6,  claw,           sensorDigitalOut)
@@ -17,26 +16,10 @@
 #pragma config(Motor,  port8,           lift1,         tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port9,           lift2,         tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port10,          bar2,          tmotorVex393_HBridge, openLoop)
-
-// This code is for the VEX cortex platform
 #pragma platform(VEX2)
-
-// Select Download method as "competition"
 #pragma competitionControl(Competition)
-
-
-//Main competition background code...do not modify!
 #include "Vex_Competition_Includes.c"
 
-/*---------------------------------------------------------------------------*/
-/*                          Pre-Autonomous Functions                         */
-/*                                                                           */
-/*  You may want to perform some actions before the competition starts.      */
-/*  Do them in the following function.  You must return from this function   */
-/*  or the autonomous and usercontrol tasks will not be started.  This       */
-/*  function is only called once after the cortex has been powered on and    */
-/*  not every time that the robot is disabled.                               */
-/*---------------------------------------------------------------------------*/
 float kP[4], kI[4], kD[4], kL[4];
 long tolerance[4];
 long ticksPerRotation, ticksPerFoot, waitBetweenPID;
@@ -174,7 +157,85 @@ int sl=0;
 int ll=0
 bool lower = False;
 long error[2] = {0, 0}
-    long i[2] = {0,0};
+long i[2] = {0,0};
+task autons[] = {red_left_far, red_left_near, red_right_far, red_right_near,
+   blue_left_far, blue_left_near, blue_right_far, blue_right_near, programming_skills}
+string names[] = {"red-left-far", "red-left-near", "red-right-far",
+ "red-right-near", "blue-left-far", "blue-left-near", "blue-right-far",
+"blue-right-near", "programming skills"}
+int auton = 0;
+
+task lcd_select(){
+
+  int pButton = nLCDButtons;
+  while(True){
+    displayLCDCenteredString(0, names[auton]);
+    if(nLCDButtons == 1 && nLCDButtons != pButton && auton != 0){
+      auton --;
+      clearLCDLine(0);
+    }
+    else if(nLCDButtons == 4 && nLCDButtons != pButton && auton != 8){
+      auton ++;
+      clearLCDLine(0);
+    }
+    else if(nLCDButtons == 2 && nLCDButtons != pButton){
+      //Calibrates gyro sensor and configures scales
+      SensorType[in3] = sensorNone;
+      wait1Msec(1000);
+      SensorType[in3] = sensorGyro;
+      wait1Msec(2000);
+      SensorScale[in3] = 260;
+      SensorFullCount[in3] = 3600;
+      //900 counts = 90 degrees
+    }
+  }
+}
+
+task red_left_far(){
+  SensorValue[claw] = 1;
+  startTask(deploy);
+  wait1Msec(500);
+  startTask(pid);
+  target[2] = 730;
+  target[3] = 345;
+  while(abs(SensorValue(mobile1) - target[2]) > tolerance[3]);
+  wait1Msec(waitBetweenPID);
+  target[0] += -47*ticksPerFoot/12;
+  target[1] += -47*ticksPerFoot/12;
+  while(abs(nMotorEncoder[port4] - target[0]) > tolerance[0] && abs(nMotorEncoder[port2] - target[1]) > tolerance[0]);
+}
+
+task red_left_near(){
+
+}
+
+task red_right_far(){
+
+}
+
+task red_right_near(){
+
+}
+
+task blue_left_far(){
+
+}
+
+task blue_left_near(){
+
+}
+
+task blue_right_far(){
+
+}
+
+task blue_right_near(){
+
+}
+
+task programming_skills(){
+
+}
 
 task mobile_goal() {
 		while(True){
@@ -182,7 +243,6 @@ task mobile_goal() {
 			motor[goal1] = (127 * vexRt[Btn6U]) + (-127 * vexRT[Btn6D]);
 			motor[goal2] = (127 * vexRt[Btn6U]) + (-127 * vexRT[Btn6D]);
   }
-
     else{
         error[0] = 730 - SensorValue(mobile1);
         error[1] = 345 - SensorValue(mobile2);
@@ -191,72 +251,27 @@ task mobile_goal() {
         motor[port7] = error[0]*0.3 + i[0]*0.04;
         motor[port6] = error[1]*0.3 + i[1]*0.04;
         wait1Msec(25);
-
     }
 }
 }
+
 void pre_auton()
 {
 	init();
-  // Set bStopTasksBetweenModes to false if you want to keep user created tasks
-  // running between Autonomous and Driver controlled modes. You will need to
-  // manage all user created tasks if set to false.
-  bStopTasksBetweenModes = true;
-
-	// Set bDisplayCompetitionStatusOnLcd to false if you don't want the LCD
-	// used by the competition include file, for example, you might want
-	// to display your team name on the LCD in this function.
-	// bDisplayCompetitionStatusOnLcd = false;
-
-  // All activities that occur before the competition starts
-  // Example: clearing encoders, setting servo positions, ...
+  bStopTasksBetweenModes = False;
+  clearLCDLine(0);
+  clearLCDLine(1);
+  startTask(lcd_select);
 }
-
-/*---------------------------------------------------------------------------*/
-/*                                                                           */
-/*                              Autonomous Task                              */
-/*                                                                           */
-/*  This task is used to control your robot during the autonomous phase of   */
-/*  a VEX Competition.                                                       */
-/*                                                                           */
-/*  You must modify the code to add your own robot specific commands here.   */
-/*---------------------------------------------------------------------------*/
 
 task autonomous()
 {
-  SensorValue[claw] = 1;
-    startTask(deploy);
-    wait1Msec(500);
-    startTask(pid);
-/*
-    target[0] += -24*ticksPerFoot/12;
-    target[1] += -24*ticksPerFoot/12;
-    displayLCDNumber(0,0,target[0]);
-*/
-
-    target[2] = 730;
-    target[3] = 345;
-    while(abs(SensorValue(mobile1) - target[2]) > tolerance[3]);
-    wait1Msec(waitBetweenPID);
-    target[0] += -47*ticksPerFoot/12;
-    target[1] += -47*ticksPerFoot/12;
-		while(abs(nMotorEncoder[port4] - target[0]) > tolerance[0] && abs(nMotorEncoder[port2] - target[1]) > tolerance[0]);
+    startTask(tasks[auton]);
 		}
-
-/*---------------------------------------------------------------------------*/
-/*                                                                           */
-/*                              User Control Task                            */
-/*                                                                           */
-/*  This task is used to control your robot during the user control phase of */
-/*  a VEX Competition.                                                       */
-/*                                                                           */
-/*  You must modify the code to add your own robot specific commands here.   */
-/*---------------------------------------------------------------------------*/
 
 task usercontrol()
 {
-  clearLCDLine(0);
-clearLCDLine(1);
+stopTask(pid);
 startTask(mobile_goal);
 while(true){
 
@@ -264,8 +279,6 @@ while(true){
 		motor[lb] = reverse * (vexRT[Ch3] + reverse*(vexRt[Ch1]+ vexRT[Ch4]))/half;
 		motor[rf] = reverse * (vexRT[Ch3] - reverse*(vexRt[Ch1]+ vexRT[Ch4]))/half;
 		motor[rb] = reverse * (vexRT[Ch3] - reverse*(vexRt[Ch1]+ vexRT[Ch4]))/half;
-
-
 
 		motor[lift1] = (127 * vexRt[Btn5U]) + (-127 * vexRT[Btn5D]);
 		motor[lift2] = (127 * vexRt[Btn5U]) + (-127 * vexRT[Btn5D]);
@@ -290,7 +303,5 @@ while(true){
 					lower = !lower;
 				}
 		ll = vexRT[Btn8L];
-		displayLCDString(1, 0, "Aut");
-	displayLCDNumber(0,0, SensorValue(mobile1));
 	}
 }
