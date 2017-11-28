@@ -22,6 +22,7 @@
 float kP[4], kI[4], kD[4], kL[4];
 long tolerance[4];
 long ticksPerRotation, ticksPerFoot, waitBetweenPID;
+bool turning = False;
 /*
 Constants
 * * *
@@ -32,6 +33,12 @@ Constants
 * * *
 */
 void init() {
+	SensorType[in3] = sensorNone;
+	wait1Msec(1000);
+	SensorType[in3] = sensorGyro;
+	wait1Msec(2000);
+	SensorScale[in8] = 260;
+	SensorFullCount[in8] = 3600;
     //Wheel base constants
     kP[0] = -0.08;
     kI[0] = -0.3;
@@ -71,7 +78,7 @@ void init() {
 }
 
 long target[6] = {0, 0, sensorValue(mobile1), sensorValue(mobile2), 0, 0};
-
+long degrees = 0;
 /*
 Targets
 * * *
@@ -92,36 +99,54 @@ task pid() {
     long d[6] = {0, 0, 0, 0, 0, 0};
 
     while(true) {
-
-        error[0] = target[0] - nMotorEncoder[port4];
-        error[1] = target[1] - nMotorEncoder[port2];
+	if(!turning){
+		error[0] = target[0] - SensorValue(left);
+		error[1] = target[1] - SensorValue(right);
+		p[0] = error[0];
+		p[1] = error[1];
+		i[0] = abs(i[0] + error[0]) < kL[0] ? i[0] + error[0] : sgn(i[0] + error[0])*kL[0];
+		i[1] = abs(i[1] + error[1]) < kL[0] ? i[1] + error[1] : sgn(i[1] + error[1])*kL[0];
+		d[0] = error[0] - pError[0];
+		displayLCDNumber(0,1, d[0]);
+		d[1] = error[1] - pError[1];
+		motor[port4] = p[0]*kP[0] + i[0]*kI[0] + d[0]*kD[0];
+		motor[port5] = p[0]*kP[0] + i[0]*kI[0] + d[0]*kD[0];
+		motor[port2] = p[1]*kP[0] + i[1]*kI[0] + d[1]*kD[0];
+		motor[port3] = p[1]*kP[0] + i[1]*kI[0] + d[1]*kD[0];
+    }
+	else{
+		error[0] = degrees - SensorValue(in3);
+		error[1] = degrees - SenosrValue(in3);
+		p[0] = error[0];
+		p[1] = error[1];
+		i[0] = abs(i[0] + error[0]) < kL[0] ? i[0] + error[0] : sgn(i[0] + error[0])*kL[0];
+		i[1] = abs(i[1] + error[1]) < kL[0] ? i[1] + error[1] : sgn(i[1] + error[1])*kL[0];
+		d[0] = error[0] - pError[0];
+		displayLCDNumber(0,1, d[0]);
+		d[1] = error[1] - pError[1];
+		motor[port4] = p[0]*kP[0] + i[0]*kI[0] + d[0]*kD[0];
+		motor[port5] = p[0]*kP[0] + i[0]*kI[0] + d[0]*kD[0];
+		motor[port2] = p[1]*kP[0] + i[1]*kI[0] + d[1]*kD[0];
+		motor[port3] = p[1]*kP[0] + i[1]*kI[0] + d[1]*kD[0];
+	}
         error[2] = target[2] - SensorValue(mobile1);
         error[3] = target[3] - SensorValue(mobile2);
         error[4] = target[4] - SensorValue(bar);
         error[5] = target[5] - SensorValue(elevator);
-        p[0] = error[0];
-        p[1] = error[1];
         p[2] = error[2];
         p[3] = error[3];
         p[4] = error[4];
         p[5] = error[5];
-        i[0] = abs(i[0] + error[0]) < kL[0] ? i[0] + error[0] : sgn(i[0] + error[0])*kL[0];
-        i[1] = abs(i[1] + error[1]) < kL[0] ? i[1] + error[1] : sgn(i[1] + error[1])*kL[0];
         i[2] = abs(i[2] + error[2]) < kL[0] ? i[2] + error[2] : sgn(i[2] + error[2])*kL[0];
         i[3] = abs(i[3] + error[3]) < kL[0] ? i[3] + error[3] : sgn(i[3] + error[3])*kL[0];
         i[4] = abs(i[4] + error[4]) < kL[0] ? i[4] + error[4] : sgn(i[4] + error[4])*kL[0];
         i[5] = abs(i[5] + error[5]) < kL[0] ? i[5] + error[5] : sgn(i[5] + error[5])*kL[0];
-        d[0] = error[0] - pError[0];
-        displayLCDNumber(0,1, d[0]);
-        d[1] = error[1] - pError[1];
+        
         d[2] = error[2] - pError[2];
         d[3] = error[3] - pError[3];
         d[4] = error[4] - pError[4];
         d[5] = error[5] - pError[5];
-        motor[port4] = p[0]*kP[0] + i[0]*kI[0] + d[0]*kD[0];
-        motor[port5] = p[0]*kP[0] + i[0]*kI[0] + d[0]*kD[0];
-        motor[port2] = p[1]*kP[0] + i[1]*kI[0] + d[1]*kD[0];
-        motor[port3] = p[1]*kP[0] + i[1]*kI[0] + d[1]*kD[0];
+       
         motor[port7] = p[2]*kP[1] + i[2]*kI[1] + d[2]*kD[1];
         motor[port6] = p[3]*kP[1] + i[3]*kI[1] + d[3]*kD[1];
         motor[port8] = p[4]*kP[2] + i[4]*kI[2] + d[4]*kD[2];
@@ -168,7 +193,7 @@ task main() {
     wait1Msec(waitBetweenPID);
     target[0] += -47*ticksPerFoot/12;
     target[1] += -47*ticksPerFoot/12;
-		while(abs(nMotorEncoder[port4] - target[0]) > tolerance[0] && abs(nMotorEncoder[port2] - target[1]) > tolerance[0]);
+	while(abs(SensorValue(left) - target[0]) > tolerance[0] && abs(SensorValue(right) - target[1]) > tolerance[0]);
     /*
     target[0] += 19*ticksPerFoot/12;
     target[1] += 19*ticksPerFoot/12;
